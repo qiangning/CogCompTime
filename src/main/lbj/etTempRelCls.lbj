@@ -1,0 +1,160 @@
+package edu.illinois.cs.cogcomp.temporal.lbjava.TempRelCls_ET;
+
+import edu.illinois.cs.cogcomp.temporal.datastruct.Temporal.TemporalRelation_ET;
+import edu.illinois.cs.cogcomp.temporal.datastruct.Temporal.EventTemporalNode;
+import edu.illinois.cs.cogcomp.temporal.datastruct.Temporal.TimexTemporalNode;
+import edu.illinois.cs.cogcomp.temporal.configurations.ParamLBJ;
+import edu.illinois.cs.cogcomp.core.datastructures.IntPair;
+import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.lang.Object;
+
+discrete Label(TemporalRelation_ET et) <-
+{
+    return et.getLabel();
+}
+
+discrete SentDist(TemporalRelation_ET et) <- 
+{
+    int sentDiff = et.getSentDiff();
+    if(sentDiff==0)
+        return "SentDist:Same";
+    else if(sentDiff==1)
+        return "SentDist:One";
+    else
+        return "SentDist:Many";
+}
+discrete% TokenDist(TemporalRelation_ET et) <-
+{
+    EventTemporalNode e = et.getEventNode();
+    TimexTemporalNode t = et.getTimexNode();
+    sense "Timex Len: "+t.getLength();
+    boolean e_first = et.isEventFirstInText();
+    sense e_first? "E First" : "T First";
+    int dist = et.getETDistance();
+    if(Math.abs(dist)<=5){
+        sense "ET Distance: "+dist;
+    }
+    else{
+        if(e_first)
+            sense "ET Distance: -Many";
+        else
+            sense "ET Distance: Many";
+    }
+}
+
+discrete% POS(TemporalRelation_ET et) <- 
+{
+    EventTemporalNode e = et.getEventNode();
+    TimexTemporalNode t = et.getTimexNode();
+    sense "E_POS:"+e.getPos();
+    sense "T_Type:"+t.getType();
+    sense "ET_POS_Type:"+e.getPos() +":"+ t.getType();
+
+    String[] e_pos_win = e.getPos_window();
+    String[] t_pos_win = t.getPos_window();
+    int i=0;
+    for(;i<e_pos_win.length;i++){
+        sense "E_POS_WIN:"+i+":"+e_pos_win[i];
+    }
+    for(i=0;i<t_pos_win.length;i++){
+        sense "T_POS_WIN:"+i+":"+t_pos_win[i];
+    }
+}
+
+discrete% Lemma(TemporalRelation_ET et) <- 
+{
+    EventTemporalNode e = et.getEventNode();
+    TimexTemporalNode t = et.getTimexNode();
+    sense "E_LEMMA:"+e.getLemma();
+    sense "ET_LEMMA_Type:"+e.getLemma() +":"+ t.getType();
+}
+
+
+discrete% PPHead(TemporalRelation_ET et)<-
+{
+    EventTemporalNode e = et.getEventNode();
+    TimexTemporalNode t = et.getTimexNode();
+    sense "E_PP_HEAD:"+e.getPp_head();
+    sense "T_PP_HEAD:"+t.getPp_head();
+    if(!e.getPp_head().equals("N/A")){
+        if(e.getPp_head().equals(t.getPp_head()))
+            sense "ET_SAME_PP_HEAD:YES";
+        else
+            sense "ET_SAME_PP_HEAD:NO";
+    }
+}
+
+
+discrete% SignalWords(TemporalRelation_ET et) <-
+{
+    HashSet signals_before = et.getSignals_before();
+    HashSet signals_between = et.getSignals_between();
+    HashSet signals_after = et.getSignals_after();
+
+    Iterator iter = signals_before.iterator();
+    while(iter.hasNext()){
+        sense "BEFORE:"+iter.next();
+    }
+
+    iter = signals_between.iterator();
+    while(iter.hasNext()){
+        sense "BETWEEN:"+iter.next();
+    }
+
+    iter = signals_after.iterator();
+    while(iter.hasNext()){
+        sense "AFTER:"+iter.next();
+    }
+}
+
+discrete% ClosestTimexFeats(TemporalRelation_ET et) <-
+{
+    HashSet feats = et.getClosestTimexFeats();
+    Iterator iter = feats.iterator();
+    while(iter.hasNext()){
+        sense "ClosestTimexFeats:"+iter.next();
+    }
+}
+
+discrete% IsVerbSRL(TemporalRelation_ET et) <-
+{
+    EventTemporalNode e1 = et.getEventNode();
+    boolean e1IsVerbSRL = e1.getVerb_srl()!=null;
+    sense "EVENT IsVerbSRL:"+(e1IsVerbSRL?"Yes":"No");
+}
+
+discrete% IsReporting(TemporalRelation_ET et) <-
+{
+    EventTemporalNode e1 = et.getEventNode();
+    boolean e1IsReporting = e1.isReporting();
+    sense "EVENT IsReporting:"+(e1IsReporting?"Yes":"No");
+}
+
+discrete% IsIntention(TemporalRelation_ET et) <-
+{
+    EventTemporalNode e1 = et.getEventNode();
+    boolean e1IsIntention = e1.isIntention();
+    sense "EVENT IsIntention:"+(e1IsIntention?"Yes":"No");
+}
+
+discrete[] CoveringSRL(TemporalRelation_ET et) <-
+{
+    sense "EVENT Covering TIMEX:"+(et.e_covering_t?"Yes":"No");
+    sense "EVENT Covering TIMEX Type:"+et.e_covering_t_type;
+}
+
+//VerbSRLFeats,POS_JOINT_FEAT,PREV_EVENT_FEAT
+
+discrete BiasTermTemprel(TemporalRelation_ET et) <-
+{
+    return "bias";
+}
+
+discrete etTempRelCls(TemporalRelation_ET et) <-
+learn Label
+using
+    BiasTermTemprel,SentDist,TokenDist,POS,PPHead,SignalWords,ClosestTimexFeats,IsVerbSRL,IsReporting,CoveringSRL
+    with new SparseNetworkLearner(new SparseAveragedPerceptron(ParamLBJ.ETTempRelClassifierPerceptronParams.learningRate,0,ParamLBJ.ETTempRelClassifierPerceptronParams.thickness))
+end

@@ -1,0 +1,210 @@
+package edu.illinois.cs.cogcomp.temporal.lbjava.TempRelCls;
+
+import edu.illinois.cs.cogcomp.temporal.datastruct.Temporal.TemporalRelation_EE;
+import edu.illinois.cs.cogcomp.temporal.datastruct.Temporal.EventTemporalNode;
+import edu.illinois.cs.cogcomp.temporal.configurations.ParamLBJ;
+import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.lang.Object;
+
+discrete Label(TemporalRelation_EE ee) <-
+{
+    return ee.getLabel();
+}
+
+discrete SentDist(TemporalRelation_EE ee) <- 
+{
+    int sentDiff = ee.getSentDiff();
+    if(sentDiff==0)
+        return "SentDist:Same";
+    else if(sentDiff==1)
+        return "SentDist:One";
+    else
+        return "SentDist:Many";
+}
+real TokenDist(TemporalRelation_EE ee) <-
+{
+    return ee.getTokDiff();
+}
+
+discrete% POS(TemporalRelation_EE ee) <- 
+{
+    EventTemporalNode e1 = ee.getSourceNode();
+    EventTemporalNode e2 = ee.getTargetNode();
+    sense "E1_POS:"+e1.getPos();
+    sense "E2_POS:"+e2.getPos();
+    sense "E1_E2_POS:"+e1.getPos() +":"+ e2.getPos();
+
+    String[] e1_pos_win = e1.getPos_window();
+    String[] e2_pos_win = e2.getPos_window();
+    int i=0;
+    for(;i<e1_pos_win.length;i++){
+        sense "E1_POS_WIN:"+i+":"+e1_pos_win[i];
+    }
+    for(i=0;i<e2_pos_win.length;i++){
+        sense "E2_POS_WIN:"+i+":"+e2_pos_win[i];
+    }
+}
+
+discrete[] Lemma(TemporalRelation_EE ee) <- 
+{
+    EventTemporalNode e1 = ee.getSourceNode();
+    EventTemporalNode e2 = ee.getTargetNode();
+    sense "E1_LEMMA:"+e1.getLemma();
+    sense "E2_LEMMA:"+e2.getLemma();
+    if(e1.getLemma().equals(e2.getLemma()))
+        sense "E1E2_SAME_LEMMA:YES";
+    else
+        sense "E1E2_SAME_LEMMA:NO";
+}
+
+discrete SameSynSet(TemporalRelation_EE ee) <-
+{
+    if(ee.isSameSynset())
+        return "SAME_SYNSET:YES";
+    else
+        return "SAME_SYNSET:NO";
+}
+
+discrete% PPHead(TemporalRelation_EE ee)<-
+{
+    EventTemporalNode e1 = ee.getSourceNode();
+    EventTemporalNode e2 = ee.getTargetNode();
+    sense "E1_PP_HEAD:"+e1.getPp_head();
+    sense "E2_PP_HEAD:"+e2.getPp_head();
+    if(!e1.getPp_head().equals("N/A")){
+        if(e1.getPp_head().equals(e2.getPp_head()))
+            sense "E1E2_SAME_PP_HEAD:YES";
+        else
+            sense "E1E2_SAME_PP_HEAD:NO";
+    }
+}
+
+
+discrete% SignalWords(TemporalRelation_EE ee) <-
+{
+    HashSet signals_before = ee.getSignals_before();
+    HashSet signals_between = ee.getSignals_between();
+    HashSet signals_after = ee.getSignals_after();
+
+    Iterator iter = signals_before.iterator();
+    while(iter.hasNext()){
+        sense "BEFORE:"+iter.next();
+    }
+
+    iter = signals_between.iterator();
+    while(iter.hasNext()){
+        sense "BETWEEN:"+iter.next();
+    }
+
+    iter = signals_after.iterator();
+    while(iter.hasNext()){
+        sense "AFTER:"+iter.next();
+    }
+}
+
+real[] CorpusStats(TemporalRelation_EE ee) <-
+{
+    double total = ee.c_before+ee.c_after+ee.c_vague+ee.c_equal+ee.c_includes+ee.c_included;
+    sense 1.0d*ee.c_before/total;
+    sense 1.0d*ee.c_after/total;
+    sense 1.0d*ee.c_includes/total;
+    sense 1.0d*ee.c_included/total;
+    sense 1.0d*ee.c_equal/total;
+    sense 1.0d*ee.c_vague/total;
+    sense Math.log(total);
+}
+
+discrete% ClosestTimexFeats(TemporalRelation_EE ee) <-
+{
+    HashSet feats = ee.getClosestTimexFeats();
+    Iterator iter = feats.iterator();
+    while(iter.hasNext()){
+        sense "ClosestTimexFeats:"+iter.next();
+    }
+}
+
+discrete% IsVerbSRL(TemporalRelation_EE ee) <-
+{
+    EventTemporalNode e1 = ee.getSourceNode();
+    EventTemporalNode e2 = ee.getTargetNode();
+    boolean e1IsVerbSRL = e1.getVerb_srl()!=null;
+    boolean e2IsVerbSRL = e2.getVerb_srl()!=null;
+    sense "E1 IsVerbSRL:"+(e1IsVerbSRL?"Yes":"No");
+    sense "E2 IsVerbSRL:"+(e2IsVerbSRL?"Yes":"No");
+    sense "E1_E2 IsVerbSRL"+(e1IsVerbSRL?"Yes":"No") +":"+ (e2IsVerbSRL?"Yes":"No");
+}
+
+discrete% IsReporting(TemporalRelation_EE ee) <-
+{
+    EventTemporalNode e1 = ee.getSourceNode();
+    EventTemporalNode e2 = ee.getTargetNode();
+    boolean e1IsReporting = e1.isReporting();
+    boolean e2IsReporting = e2.isReporting();
+    sense "E1 IsReporting:"+(e1IsReporting?"Yes":"No");
+    sense "E2 IsReporting:"+(e2IsReporting?"Yes":"No");
+    sense "E1_E2 IsReporting"+(e1IsReporting?"Yes":"No") +":"+ (e2IsReporting?"Yes":"No");
+}
+
+discrete% IsIntention(TemporalRelation_EE ee) <-
+{
+    EventTemporalNode e1 = ee.getSourceNode();
+    EventTemporalNode e2 = ee.getTargetNode();
+    boolean e1IsIntention = e1.isIntention();
+    boolean e2IsIntention = e2.isIntention();
+    sense "E1 IsIntention:"+(e1IsIntention?"Yes":"No");
+    sense "E2 IsIntention:"+(e2IsIntention?"Yes":"No");
+    sense "E1_E2 IsIntention"+(e1IsIntention?"Yes":"No") +":"+ (e2IsIntention?"Yes":"No");
+}
+
+discrete[] CoveringSRL(TemporalRelation_EE ee) <-
+{
+    sense "E1 Covering E2:"+(ee.e1_covering_e2?"Yes":"No");
+    sense "E1 Covering E2 Type:"+ee.e1_covering_e2_type;
+    sense "E1 Covered by E2:"+(ee.e2_covering_e1?"Yes":"No");
+    sense "E1 Covered by E2 Type:"+ee.e2_covering_e1_type;
+    sense "E1_E2 Covering"+(ee.e1_covering_e2?"Yes":"No") +":"+ (ee.e2_covering_e1?"Yes":"No");
+}
+
+//VerbSRLFeats,POS_JOINT_FEAT,PREV_EVENT_FEAT
+
+discrete BiasTermTemprel(TemporalRelation_EE ee) <-
+{
+    return "bias";
+}
+
+discrete eeTempRelCls(TemporalRelation_EE ee) <-
+learn Label
+using
+    BiasTermTemprel,SentDist,TokenDist,POS,SameSynSet,PPHead,SignalWords,CorpusStats,ClosestTimexFeats,IsVerbSRL,IsReporting
+    with new SparseNetworkLearner(new SparseAveragedPerceptron(ParamLBJ.EETempRelClassifierPerceptronParams.learningRate,0,ParamLBJ.EETempRelClassifierPerceptronParams.thickness))
+end
+
+discrete eeTempRelCls2(TemporalRelation_EE ee) <-
+learn Label
+using
+    BiasTermTemprel,SentDist,TokenDist,POS,SameSynSet,PPHead,SignalWords,CorpusStats,ClosestTimexFeats,IsVerbSRL,IsReporting,IsIntention
+    with new SparseNetworkLearner(new SparseAveragedPerceptron(ParamLBJ.EETempRelClassifierPerceptronParams.learningRate,0,ParamLBJ.EETempRelClassifierPerceptronParams.thickness))
+end
+
+discrete eeTempRelCls3(TemporalRelation_EE ee) <-
+learn Label
+using
+    BiasTermTemprel,SentDist,TokenDist,POS,SameSynSet,PPHead,SignalWords,CorpusStats,ClosestTimexFeats,IsVerbSRL,IsReporting,Lemma
+    with new SparseNetworkLearner(new SparseAveragedPerceptron(ParamLBJ.EETempRelClassifierPerceptronParams.learningRate,0,ParamLBJ.EETempRelClassifierPerceptronParams.thickness))
+end
+
+discrete eeTempRelCls4(TemporalRelation_EE ee) <-
+learn Label
+using
+    BiasTermTemprel,SentDist,TokenDist,POS,SameSynSet,PPHead,SignalWords,CorpusStats,ClosestTimexFeats,IsVerbSRL,IsReporting,CoveringSRL
+    with new SparseNetworkLearner(new SparseAveragedPerceptron(ParamLBJ.EETempRelClassifierPerceptronParams.learningRate,0,ParamLBJ.EETempRelClassifierPerceptronParams.thickness))
+end
+
+discrete eeTempRelCls5(TemporalRelation_EE ee) <-
+learn Label
+using
+    BiasTermTemprel,SentDist,TokenDist,POS,SameSynSet,PPHead,SignalWords,CorpusStats,ClosestTimexFeats,IsVerbSRL,IsReporting,Lemma,CoveringSRL
+    with new SparseNetworkLearner(new SparseAveragedPerceptron(ParamLBJ.EETempRelClassifierPerceptronParams.learningRate,0,ParamLBJ.EETempRelClassifierPerceptronParams.thickness))
+end

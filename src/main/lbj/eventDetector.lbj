@@ -1,0 +1,238 @@
+package edu.illinois.cs.cogcomp.temporal.lbjava.EventDetector;
+
+import edu.illinois.cs.cogcomp.temporal.TemporalRelationExtractor.EventTokenCandidate;
+import edu.illinois.cs.cogcomp.temporal.configurations.ParamLBJ;
+import edu.illinois.cs.cogcomp.temporal.configurations.SignalWordSet;
+import edu.illinois.cs.cogcomp.temporal.datastruct.Temporal.TimexTemporalNode;
+import edu.illinois.cs.cogcomp.core.datastructures.IntPair;
+import edu.illinois.cs.cogcomp.core.datastructures.textannotation.Constituent;
+import edu.illinois.cs.cogcomp.core.datastructures.Pair;
+
+
+import java.util.List;
+import java.util.HashSet;
+import java.util.Iterator;
+import java.lang.Object;
+
+discrete Label(EventTokenCandidate etc) <-
+{
+    return etc.getLabel();
+}
+
+discrete POS(EventTokenCandidate etc) <- 
+{
+    return etc.getPos();
+}
+
+discrete Lemma(EventTokenCandidate etc) <- 
+{
+    return etc.getLemma();
+}
+
+
+discrete PPHead(EventTokenCandidate etc) <- 
+{
+    return etc.getPp_head();
+}
+
+discrete[] POS_IN_WIN(EventTokenCandidate etc) <-
+{
+    int win = etc.getWindow();
+    int i;
+    String[] pos_window = etc.getPos_window();
+    for(i=0;i<win;i++){
+        sense "PREV_"+(win-i)+"_POS:"+pos_window[i];
+    }
+    for(i=win+1;i<2*win+1;i++){
+        sense "NEXT_"+(i-win)+"_POS:"+pos_window[i];
+    }
+}
+
+discrete% POS_JOINT_FEAT(EventTokenCandidate etc) <-
+{
+    String pos = etc.getPos();
+    String lemma = etc.getLemma();
+    String pphead = etc.getPp_head();
+
+    sense "POS_LEMMA:"+pos+":"+lemma;
+    sense "POS_PPHEAD:"+pos+":"+pphead;
+
+    int win = etc.getWindow();
+    int i;
+    String[] pos_window = etc.getPos_window();
+    for(i=0;i<win;i++){
+        sense "POS_PREV_"+(win-i)+"_POS:"+pos+":"+pos_window[i];
+    }
+    for(i=win+1;i<2*win+1;i++){
+        sense "POS_NEXT_"+(i-win)+"_POS:"+pos+":"+pos_window[i];
+    }
+
+}
+
+discrete[] Lemma_IN_WIN(EventTokenCandidate etc) <-
+{
+    int win = etc.getWindow();
+    int i;
+    String[] lemma_window = etc.getLemma_window();
+    for(i=0;i<win;i++){
+        sense "PREV_"+(win-i)+"_POS:"+lemma_window[i];
+    }
+    for(i=win+1;i<2*win+1;i++){
+        sense "NEXT_"+(i-win)+"_POS:"+lemma_window[i];
+    }
+}
+
+discrete% SignalWords(EventTokenCandidate etc) <-
+{
+    HashSet signals_before = etc.getSignals_before();
+    HashSet signals_after = etc.getSignals_after();
+    Iterator iter = signals_before.iterator();
+    while(iter.hasNext()){
+        sense "BEFORE:"+iter.next();
+    }
+    iter = signals_after.iterator();
+    while(iter.hasNext()){
+        sense "AFTER:"+iter.next();
+    }
+}
+
+discrete isReporting(EventTokenCandidate etc) <-
+{
+    return "IS REPORTING:"+etc.isReporting();
+}
+
+discrete isIntention(EventTokenCandidate etc) <-
+{
+    return "IS INTENTION:"+etc.isIntention();
+}
+
+discrete% ClosestTimexFeats(EventTokenCandidate etc) <-
+{
+    TimexTemporalNode t1 = etc.getClosestTimex_left();
+    TimexTemporalNode t2 = etc.getClosestTimex_right();
+    if(t1!=null&&!t1.isDCT()){
+        sense "ClosestTimex Left:Exist";
+        sense "ClosestTimex Left:"+t1.getType();
+        if(t1.getSentId()==etc.getSentId()){
+            sense "ClosestTimex Left:Same Sentence";
+            if(etc.getTokenId()-t1.getTokenSpan().getSecond()<3)
+                sense "ClosestTimex Left:TokenDiff<3";
+            else if(etc.getTokenId()-t1.getTokenSpan().getSecond()<5)
+                sense "ClosestTimex Left:TokenDiff<5";
+        }
+    }
+
+    if(t2!=null&&!t2.isDCT()){
+        sense "ClosestTimex Right:Exist";
+        sense "ClosestTimex Right:"+t2.getType();
+        if(t2.getSentId()==etc.getSentId()){
+            sense "ClosestTimex Right:Same Sentence";
+            if(t2.getTokenSpan().getSecond()-etc.getTokenId()<3)
+                sense "ClosestTimex Right:TokenDiff<3";
+            else if(t2.getTokenSpan().getSecond()-etc.getTokenId()<5)
+                sense "ClosestTimex Right:TokenDiff<5";
+        }
+    }
+}
+
+discrete% VerbSRLFeats(EventTokenCandidate etc) <-
+{
+    Object[] verbSrls = etc.getVerb_srl_same_sentence().toArray();
+    if(verbSrls.length>0){
+        if(verbSrls.length==1)
+            sense "SRL Same Sent:single";
+        else if(verbSrls.length==2)
+            sense "SRL Same Sent:double";
+        else
+            sense "SRL Same Sent:multiple";
+    }
+}
+
+discrete IsVerbSRL(EventTokenCandidate etc) <-
+{
+    return "IsVerbSRL:"+(etc.getVerb_srl()!=null?"Yes":"No");
+}
+
+discrete% CoveringVerbSRL(EventTokenCandidate etc) <-
+{
+    List verb_srl_covering = etc.getVerb_srl_covering();
+    int i=0;
+    for(;i<verb_srl_covering.size();i++){
+        Pair srl = (Pair)verb_srl_covering.get(i);
+        String pred = ((Constituent) (srl.getSecond())).getAttribute("predicate");
+        //String type = (String)(srl.getFirst());
+        String feat = "";
+
+        if(SignalWordSet.getInstance().reportingVerbSet.contains(pred))
+            feat += ":REPORTING";
+        else if(SignalWordSet.getInstance().intentionVerbSet.contains(pred))
+            feat += ":INTENTION";
+        else
+            feat += ":OTHER";
+        sense "COVERING SRL:"+feat;
+    }
+}
+
+discrete% PREV_EVENT_FEAT(EventTokenCandidate etc) <-
+{
+    EventTokenCandidate prev_etc = etc.getPrev_event();
+    if(prev_etc!=null&&prev_etc.getSentId()==etc.getSentId()){
+        sense "PREV_EVENT LABEL:"+prev_etc.getLabel();
+
+        if(prev_etc.getVerb_srl()!=null){
+            sense "PREV_EVENT IS SRL:Yes";
+            sense "PREV_EVENT IS SRL:Yes"+":"+prev_etc.getLabel();
+
+            List allSRL = etc.getVerb_srl_covering();
+            int i=0;
+            for(;i<allSRL.size();i++){
+                Pair srl = (Pair)allSRL.get(i);
+                if(prev_etc.getVerb_srl()==(Constituent) srl.getSecond()){
+                    sense "PREV_EVENT Covering THIS:Yes";
+                    sense "PREV_EVENT Covering THIS:Yes"+":"+prev_etc.getLabel();
+                }
+            }
+        }
+        else{
+            sense "PREV_EVENT IS SRL:No";
+            sense "PREV_EVENT IS SRL:No"+":"+prev_etc.getLabel();
+        }
+
+        if(prev_etc.isReporting()){
+            sense "PREV_EVENT Type:Reporting";
+            sense "PREV_EVENT Type:Reporting"+":"+prev_etc.getLabel();
+        }
+        else if(prev_etc.isIntention()){
+            sense "PREV_EVENT Type:Intention";
+            sense "PREV_EVENT Type:Intention"+":"+prev_etc.getLabel();
+        }
+        else{
+            sense "PREV_EVENT Type:Other";
+            sense "PREV_EVENT Type:Other"+":"+prev_etc.getLabel();
+        }
+    }
+}
+
+discrete BiasTermDetector(EventTokenCandidate etc) <-
+{
+    return "bias";
+}
+
+// discrete BiasTermDetectorSVM(EventTokenCandidate etc) <-
+// {
+//     return "bias";
+// }
+
+discrete eventDetector(EventTokenCandidate etc) <-
+learn Label
+using
+    BiasTermDetector, POS, Lemma, PPHead, POS_IN_WIN, Lemma_IN_WIN, SignalWords,ClosestTimexFeats,VerbSRLFeats,POS_JOINT_FEAT,isReporting,IsVerbSRL,PREV_EVENT_FEAT
+    with new SparseNetworkLearner(new SparseAveragedPerceptron(ParamLBJ.EventDetectorPerceptronParams.learningRate,0,ParamLBJ.EventDetectorPerceptronParams.thickness))
+end
+
+// discrete eventDetector_svm(EventTokenCandidate etc) <-
+// learn Label
+// using
+//     BiasTermDetectorSVM, POS, Lemma, PPHead, POS_IN_WIN, Lemma_IN_WIN, SignalWords
+//     with new SupportVectorMachine(1, 0.1, 1)
+// end

@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Force Layout with labels on edges</title>
+<script src="http://d3js.org/d3.v3.min.js" charset="utf-8"></script>
+<style type="text/css">
+</style>
+</head>
+<body>
+
+<script type="text/javascript">
+
+    var w = 2000
+    var h = 1000
+    var linkDistance=30;
+    var circle_size=10;
+
+    var colors = d3.scale.category10();
+	
+    var dataset = {
+
+    nodes: [
+    {name:"E0:conquered", color: 1},
+    {name:"E1:died", color: 1},
+    {name:"E10:made", color: 1},
+    {name:"E11:Speaking", color: 1},
+    {name:"E12:said", color: 1},
+    {name:"E13:estimated", color: 1},
+    {name:"E14:got", color: 1},
+    {name:"E15:pleased", color: 1},
+    {name:"E16:knew", color: 1},
+    {name:"E17:thought", color: 1},
+    {name:"E18:talked", color: 1},
+    {name:"E19:said", color: 1},
+    {name:"E2:died", color: 1},
+    {name:"E20:met", color: 1},
+    {name:"E21:called", color: 1},
+    {name:"E22:said", color: 1},
+    {name:"E23:worked", color: 1},
+    {name:"E24:said", color: 1},
+    {name:"E25:sought", color: 1},
+    {name:"E26:involved", color: 1},
+    {name:"E27:remained", color: 1},
+    {name:"E28:retiring", color: 1},
+    {name:"E29:worked", color: 1},
+    {name:"E3:helped", color: 1},
+    {name:"E30:leaves", color: 1},
+    {name:"E31:died", color: 1},
+    {name:"E4:Tenzing", color: 1},
+    {name:"E5:paid", color: 1},
+    {name:"E6:shunned", color: 1},
+    {name:"E7:took", color: 1},
+    {name:"E8:made", color: 1},
+    {name:"E9:crossing", color: 1},
+    {name:"T2:1953", color: 2},
+    {name:"T3:Wednesday", color: 2},
+    {name:"T4:1995", color: 2},
+    {name:"T8:1984", color: 2},
+    {name:"T9:last June", color: 2},
+    ],
+    edges: [
+    {source: 0, target: 12, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 22, target: 25, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 1, target: 0, label: "", len: 60, color: 1, markerend: "arrowhead"},
+    {source: 12, target: 23, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 23, target: 26, label: "", len: 60, color: 1, markerend: "arrowhead"},
+    {source: 26, target: 28, label: "", len: 60, color: 1, markerend: "arrowhead"},
+    {source: 28, target: 27, label: "", len: 60, color: 1, markerend: "arrowhead"},
+    {source: 27, target: 29, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 29, target: 30, label: "", len: 60, color: 1, markerend: "arrowhead"},
+    {source: 30, target: 31, label: "", len: 60, color: 1, markerend: "arrowhead"},
+    {source: 31, target: 2, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 2, target: 3, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 5, target: 2, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 3, target: 6, label: "", len: 60, color: 1, markerend: "arrowhead"},
+    {source: 6, target: 4, label: "", len: 60, color: 1, markerend: "arrowhead"},
+    {source: 7, target: 9, label: "", len: 60, color: 1, markerend: "arrowhead"},
+    {source: 7, target: 10, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 9, target: 8, label: "", len: 60, color: 1, markerend: "arrowhead"},
+    {source: 10, target: 8, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 14, target: 11, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 13, target: 14, label: "", len: 60, color: 1, markerend: "arrowhead"},
+    {source: 14, target: 15, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 16, target: 15, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 16, target: 17, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 18, target: 16, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 19, target: 17, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 18, target: 20, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 20, target: 19, label: "", len: 60, color: 1, markerend: "arrowhead"},
+    {source: 19, target: 21, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 21, target: 22, label: "", len: 60, color: 1, markerend: "arrowhead"},
+    {source: 25, target: 24, label: "", len: 120, color: 1, markerend: "arrowhead"},
+    {source: 0, target: 32, label: "", len: 30, color: 2, markerend: ""},
+    {source: 12, target: 33, label: "", len: 30, color: 2, markerend: ""},
+    {source: 3, target: 34, label: "", len: 30, color: 2, markerend: ""},
+    {source: 21, target: 35, label: "", len: 30, color: 2, markerend: ""},
+    {source: 22, target: 35, label: "", len: 30, color: 2, markerend: ""},
+    {source: 25, target: 36, label: "", len: 30, color: 2, markerend: ""},
+    ]
+    };
+
+ 
+    var svg = d3.select("body").append("svg").attr({"width":w,"height":h});
+
+    var force = d3.layout.force()
+        .nodes(dataset.nodes)
+        .links(dataset.edges)
+        .size([w,h])
+        .linkDistance(function(d) {return d.len;})
+        .charge([-500])
+        .theta(0.1)
+        .gravity(0.05)
+        .start();
+
+ 
+
+    var edges = svg.selectAll("line")
+      .data(dataset.edges)
+      .enter()
+      .append("line")
+      .attr("id",function(d,i) {return 'edge'+i})
+      .attr('marker-end',function(d,i){return 'url(#' + d.markerend + ')';})
+      .style("stroke",function(d,i){return colors(d.color);})
+      .style("pointer-events", "none");
+    
+    var nodes = svg.selectAll("circle")
+      .data(dataset.nodes)
+      .enter()
+      .append("circle")
+      .attr({"r":circle_size})
+      .style("fill",function(d,i){return colors(d.color);})
+      .call(force.drag)
+
+
+    var nodelabels = svg.selectAll(".nodelabel") 
+       .data(dataset.nodes)
+       .enter()
+       .append("text")
+       .attr({"x":function(d){return d.x;},
+              "y":function(d){return d.y;},
+              "class":"nodelabel",
+              "stroke":"black"})
+       .text(function(d){return d.name;});
+
+    var edgepaths = svg.selectAll(".edgepath")
+        .data(dataset.edges)
+        .enter()
+        .append('path')
+        .attr({'d': function(d) {return 'M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y},
+               'class':'edgepath',
+               'fill-opacity':0,
+               'stroke-opacity':0,
+               'fill':'blue',
+               'stroke':'red',
+               'id':function(d,i) {return 'edgepath'+i}})
+        .style("pointer-events", "none");
+
+    var edgelabels = svg.selectAll(".edgelabel")
+        .data(dataset.edges)
+        .enter()
+        .append('text')
+        .style("pointer-events", "none")
+        .attr({'class':'edgelabel',
+               'id':function(d,i){return 'edgelabel'+i},
+               'dx':linkDistance/2,
+               'dy':0,
+               'font-size':20,
+               'fill':'#aaa'});
+
+    edgelabels.append('textPath')
+        .attr('xlink:href',function(d,i) {return '#edgepath'+i})
+        .style("pointer-events", "none")
+        .text(function(d){return d.label});
+
+
+    svg.append('defs').append('marker')
+        .attr({'id':'arrowhead',
+               'viewBox':'-0 -5 10 10',
+               'refX':25,
+               'refY':0,
+               //'markerUnits':'strokeWidth',
+               'orient':'auto',
+               'markerWidth':10,
+               'markerHeight':10,
+               'xoverflow':'visible'})
+        .append('svg:path')
+            .attr('d', 'M 0,-5 L 10 ,0 L 0,5')
+            .attr('fill', '#000')
+            .attr('stroke','#000');
+     
+
+    force.on("tick", function(){
+
+        edges.attr({"x1": function(d){return d.source.x;},
+                    "y1": function(d){return d.source.y;},
+                    "x2": function(d){return d.target.x;},
+                    "y2": function(d){return d.target.y;}
+        });
+
+        nodes.attr({"cx":function(d){return d.x;},
+                    "cy":function(d){return d.y;}
+        });
+
+        nodelabels.attr("x", function(d) { return d.x; }) 
+                  .attr("y", function(d) { return d.y; });
+
+        edgepaths.attr('d', function(d) { var path='M '+d.source.x+' '+d.source.y+' L '+ d.target.x +' '+d.target.y;
+                                           //console.log(d)
+                                           return path});       
+
+        edgelabels.attr('transform',function(d,i){
+            if (d.target.x<d.source.x){
+                bbox = this.getBBox();
+                rx = bbox.x+bbox.width/2;
+                ry = bbox.y+bbox.height/2;
+                return 'rotate(180 '+rx+' '+ry+')';
+                }
+            else {
+                return 'rotate(0)';
+                }
+        });
+    });
+
+</script>
+
+</body>
+</html>

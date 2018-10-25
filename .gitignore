@@ -1,0 +1,14 @@
+.idea/
+*.iml
+data/WordNet-3.0
+data/TemProb.txt
+target/
+output/
+out/
+models/
+logs/
+scripts/
+serialization/
+gurobi.ilp
+gurobi.lp
+annotation-cache
