@@ -1,3 +1,5 @@
+# Description
+This is the backend system of the online demo [here](http://groupspaceuiuc.com/temporal/).
 # Prerequisites
 - This package was tested on Ubuntu Mate 16.04.
 - Have [maven](https://maven.apache.org/install.html) installed in your system
@@ -20,13 +22,16 @@ sh scripts/install.sh # to install gurobi.jar into the local .m2 repo
 mvn compile
 ```
 
+# Resources
+Please also download `WordNet-3.0` and `TemProb.txt` from my another repo [TemProb-NAACL18](https://github.com/qiangning/TemProb-NAACL18/tree/master/data) and put them into `CogCompTime/data/` before you move forward.
+
 # Example Usage
 If no error messages pop up, you're can move forward by
 ```
 sh scripts/example.sh
 ```
 
-Again, if no errors are encountered, you should be able to see the output in `data/output/GeorgeLowe-long.html` and `data/output/GeorgeLowe-long.txt`. Compare them with the reference output `data/output/REF-GeorgeLowe-long` to see if everything is the same.
+Again, if no errors are encountered, you should be able to see the output in `data/output/GeorgeLowe-long.html` (open it via any internet browser and you will see the *temporal graph* you see in our online demo) and `data/output/GeorgeLowe-long.txt` (the *timeline* you see in our online demo). Compare them with the reference output `data/output/REF-GeorgeLowe-long` to see if everything is the same.
 
 # Citation
 Please kindly cite the following paper: *Qiang Ning, Ben Zhou, Zhili Feng, Haoruo Peng and Dan Roth, CogCompTime: A Tool for Understanding Time in Natural Language EMNLP (Demo Track) (2018)* ([pdf](http://cogcomp.org/papers/NZFPR18.pdf))
